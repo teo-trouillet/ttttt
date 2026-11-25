@@ -1,0 +1,31 @@
+name: Deploy
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+  workflow_dispatch:
+concurrency: preview-${{ github.ref }}
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Production
+        if: github.event_name != 'pull_request'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: .
+          branch: gh-pages
+          clean-exclude: pr-preview/
+          force: false
+      - name: Preview
+        if: github.event_name == 'pull_request'
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: .
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
